@@ -1,0 +1,12 @@
+``` Step 3 - Mass file activity, pre-encryption phase (TA0040 Impact, precursor of T1486)
+    Main source: Windows Security Event ID 4663 (object access) ```
+index=windows EventCode=4663
+| stats count by host ObjectName
+| sort -count
+
+``` Complementary source: Sysmon Event ID 11 (FileCreate)
+    Note: ingestion of Sysmon 11 was inconsistent in the lab, so 4663 was preferred.
+    Run this as a separate search: ```
+``` index=sysmon EventCode=11
+| stats count by host TargetFilename
+| sort -count ```

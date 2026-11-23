@@ -1,0 +1,6 @@
+``` Step 4 - Recovery mechanisms disabled via bcdedit (MITRE ATT&CK T1490)
+    Source: Sysmon Event ID 1 (Process Create) ```
+index=sysmon EventCode=1
+| search CommandLine="*bcdedit*" OR Image="*bcdedit.exe"
+| table _time host Image CommandLine ParentImage User
+| sort -_time

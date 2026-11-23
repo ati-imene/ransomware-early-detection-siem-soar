@@ -1,0 +1,55 @@
+``` Ransomware Multi-Step Correlation with dynamic risk scoring
+    - Maps each suspicious event to a MITRE ATT&CK technique
+    - Aggregates distinct techniques per host
+    - Computes a normalized risk score (0-100), a severity level,
+      a recommended response action and a playbook suggestion
+    Scheduled every 5 minutes (see ../alerts/alert_config.md) ```
+
+index=* earliest=-60m host=SRV-FS
+| eval raw=_raw
+| rex field=raw "Object Name:\s+(?<file1>[^\r\n]+)"
+| rex field=raw "ObjectName\">(?<file2>[^<]+)"
+| eval file_path=coalesce(file1, file2)
+| eval technique=case(
+    match(raw, "(?i)EncodedCommand"), "T1059 - PowerShell",
+    match(raw, "(?i)vssadmin"), "T1490 - Shadow Copy Deletion",
+    match(raw, "(?i)bcdedit"), "T1490 - Recovery Modification",
+    match(raw, "(?i)wevtutil"), "T1070 - Log Clearing",
+    match(raw, "(?i)CurrentVersion\\\\Run"), "T1547 - Registry Persistence",
+    match(raw, "(?i)DisableAntiSpyware"), "T1562 - Defense Evasion",
+    EventCode=4663 AND like(file_path, "%TestRansom%"), "File Activity (4663)"
+  )
+| where isnotnull(technique)
+| stats values(technique) as techniques count as matched_events by host
+| eval unique_techniques=mvcount(techniques)
+| eval total_score=case(
+    unique_techniques>=6, 540,
+    unique_techniques=5, 445,
+    unique_techniques=4, 360,
+    unique_techniques=3, 270,
+    unique_techniques=2, 180,
+    unique_techniques=1, 90
+  )
+| eval max_score=540
+| eval normalized_score=round((total_score/max_score)*100, 2)
+| eval severity=case(
+    normalized_score>=80, "Critical",
+    normalized_score>=50, "High",
+    normalized_score>=30, "Medium",
+    true(), "Low"
+  )
+| eval response_action=case(
+    normalized_score>=80, "isolate_host",
+    normalized_score>=50, "kill_process_and_alert_soc",
+    normalized_score>=30, "alert_soc",
+    true(), "monitor"
+  )
+| eval playbook_suggestion=case(
+    normalized_score>=80, "Playbook: Isolation + Evidence Collection + Escalation",
+    normalized_score>=50, "Playbook: Process Termination + Analyst Review",
+    normalized_score>=30, "Playbook: Alert + Investigation",
+    true(), "Playbook: Monitoring"
+  )
+| eval alert_name="Ransomware Multi-Step Correlation"
+| eval alert_type="Pre-encryption Behavioral Detection"
+| table alert_name alert_type host matched_events techniques unique_techniques total_score normalized_score severity response_action playbook_suggestion

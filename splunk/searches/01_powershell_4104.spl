@@ -1,0 +1,5 @@
+``` Step 1 - Encoded PowerShell execution (MITRE ATT&CK T1059.001)
+    Source: PowerShell Script Block Logging, Event ID 4104 ```
+index=windows EventCode=4104
+| table _time host Message
+| sort -_time

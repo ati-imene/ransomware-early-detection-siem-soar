@@ -1,0 +1,6 @@
+``` Step 2 - Shadow copy deletion via vssadmin (MITRE ATT&CK T1490)
+    Source: Sysmon Event ID 1 (Process Create) ```
+index=sysmon EventCode=1
+| search CommandLine="*vssadmin*" OR Image="*vssadmin.exe"
+| table _time host Image CommandLine ParentImage User
+| sort -_time
