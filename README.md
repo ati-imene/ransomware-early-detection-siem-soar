@@ -6,6 +6,14 @@
 
 Author: Imene Ati · 2023–2026
 
+### ⭐ Key code
+
+| What | File |
+|---|---|
+| 🧠 Multi-step correlation + dynamic risk scoring (SPL) | [splunk/correlation/ransomware_multistep_correlation.spl](splunk/correlation/ransomware_multistep_correlation.spl) |
+| ⚡ Automated incident creation in SOAR via REST API (PowerShell) | [soar/send_to_soar.ps1](soar/send_to_soar.ps1) |
+| 🔍 Detection query for each attack step (SPL) | [splunk/searches/](splunk/searches/) |
+
 ---
 
 ## 🎯 Problem
